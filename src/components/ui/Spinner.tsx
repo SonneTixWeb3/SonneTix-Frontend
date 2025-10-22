@@ -7,7 +7,7 @@ export interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Cartoon-styled Loading Spinner
+ * Modern Loading Spinner
  *
  * @example
  * ```tsx
@@ -17,10 +17,10 @@ export interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Spinner = React.forwardRef<HTMLDivElement, SpinnerProps>(
   ({ className, size = 'md', text, ...props }, ref) => {
     const sizes = {
-      sm: 'w-6 h-6 border-2',
-      md: 'w-10 h-10 border-3',
-      lg: 'w-16 h-16 border-4',
-      xl: 'w-24 h-24 border-[6px]',
+      sm: 'w-4 h-4',
+      md: 'w-8 h-8',
+      lg: 'w-12 h-12',
+      xl: 'w-16 h-16',
     };
 
     return (
@@ -29,8 +29,8 @@ export const Spinner = React.forwardRef<HTMLDivElement, SpinnerProps>(
         className={cn('flex flex-col items-center justify-center gap-3', className)}
         {...props}
       >
-        <div className={cn('spinner-cartoon', sizes[size])} />
-        {text && <p className="font-hand text-paper-600">{text}</p>}
+        <div className={cn('spinner', sizes[size])} />
+        {text && <p className="text-sm text-gray-600">{text}</p>}
       </div>
     );
   }
@@ -51,7 +51,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ isLoading, text 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center modal-overlay">
-      <div className="paper-card p-8">
+      <div className="card p-8">
         <Spinner size="lg" text={text} />
       </div>
     </div>

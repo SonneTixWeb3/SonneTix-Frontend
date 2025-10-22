@@ -8,7 +8,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 /**
- * Cartoon-styled Input Component
+ * Modern Input Component
  *
  * @example
  * ```tsx
@@ -29,7 +29,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block mb-2 font-comic font-bold text-sm"
+            className="block mb-2 text-sm font-medium text-gray-700"
           >
             {label}
           </label>
@@ -38,19 +38,19 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            'input-cartoon',
-            error && 'border-red-500 focus:ring-red-500/20',
+            'input',
+            error && 'border-danger-500 focus:ring-danger-500',
             className
           )}
           {...props}
         />
         {error && (
-          <p className="mt-2 text-sm text-red-700 font-hand">
+          <p className="mt-2 text-sm text-danger-600">
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p className="mt-2 text-sm text-paper-500 font-hand">
+          <p className="mt-2 text-sm text-gray-500">
             {helperText}
           </p>
         )}
@@ -68,7 +68,7 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 }
 
 /**
- * Cartoon-styled Textarea Component
+ * Modern Textarea Component
  */
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, helperText, id, ...props }, ref) => {
@@ -79,7 +79,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label
             htmlFor={textareaId}
-            className="block mb-2 font-comic font-bold text-sm"
+            className="block mb-2 text-sm font-medium text-gray-700"
           >
             {label}
           </label>
@@ -88,19 +88,19 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={cn(
-            'textarea-cartoon',
-            error && 'border-red-500 focus:ring-red-500/20',
+            'textarea',
+            error && 'border-danger-500 focus:ring-danger-500',
             className
           )}
           {...props}
         />
         {error && (
-          <p className="mt-2 text-sm text-red-700 font-hand">
+          <p className="mt-2 text-sm text-danger-600">
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p className="mt-2 text-sm text-paper-500 font-hand">
+          <p className="mt-2 text-sm text-gray-500">
             {helperText}
           </p>
         )}
@@ -119,7 +119,7 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
 }
 
 /**
- * Cartoon-styled Select Component
+ * Modern Select Component
  */
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, label, error, helperText, options, id, ...props }, ref) => {
@@ -130,7 +130,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="block mb-2 font-comic font-bold text-sm"
+            className="block mb-2 text-sm font-medium text-gray-700"
           >
             {label}
           </label>
@@ -139,8 +139,8 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           id={selectId}
           className={cn(
-            'select-cartoon',
-            error && 'border-red-500 focus:ring-red-500/20',
+            'select',
+            error && 'border-danger-500 focus:ring-danger-500',
             className
           )}
           {...props}
@@ -152,12 +152,12 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p className="mt-2 text-sm text-red-700 font-hand">
+          <p className="mt-2 text-sm text-danger-600">
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p className="mt-2 text-sm text-paper-500 font-hand">
+          <p className="mt-2 text-sm text-gray-500">
             {helperText}
           </p>
         )}
