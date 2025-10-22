@@ -2,12 +2,12 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
   children: React.ReactNode;
 }
 
 /**
- * Cartoon-styled Badge Component
+ * Modern Badge Component
  *
  * @example
  * ```tsx
@@ -18,17 +18,19 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant = 'default', children, ...props }, ref) => {
     const variants = {
-      default: 'bg-paper-200 text-ink',
-      success: 'bg-green-100 text-green-800 border-green-800',
-      warning: 'bg-yellow-100 text-yellow-800 border-yellow-800',
-      danger: 'bg-red-100 text-red-800 border-red-800',
-      info: 'bg-blue-100 text-blue-800 border-blue-800',
+      default: 'badge-secondary',
+      primary: 'badge-primary',
+      secondary: 'badge-secondary',
+      success: 'badge-success',
+      warning: 'badge-warning',
+      danger: 'badge-danger',
+      info: 'badge-info',
     };
 
     return (
       <span
         ref={ref}
-        className={cn('badge-cartoon', variants[variant], className)}
+        className={cn(variants[variant], className)}
         {...props}
       >
         {children}

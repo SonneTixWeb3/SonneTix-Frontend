@@ -7,13 +7,14 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Paper-styled Card Component with sketch effect
+ * Modern Card Component
  *
  * @example
  * ```tsx
  * <Card>
  *   <CardHeader>
  *     <CardTitle>Title</CardTitle>
+ *     <CardDescription>Description</CardDescription>
  *   </CardHeader>
  *   <CardContent>
  *     Content goes here
@@ -22,11 +23,11 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
  * ```
  */
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, hover = true, children, ...props }, ref) => {
+  ({ className, hover = false, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
-        className={cn('paper-card', !hover && 'hover:shadow-sketch', className)}
+        className={cn('card', hover && 'card-hover', className)}
         {...props}
       >
         {children}
@@ -66,7 +67,7 @@ export const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
     return (
       <h3
         ref={ref}
-        className={cn('font-comic font-bold', className)}
+        className={cn('text-lg font-semibold text-gray-900', className)}
         {...props}
       >
         {children}
@@ -86,7 +87,7 @@ export const CardDescription = React.forwardRef<HTMLParagraphElement, CardDescri
     return (
       <p
         ref={ref}
-        className={cn('text-paper-600 font-hand mt-2', className)}
+        className={cn('text-sm text-gray-600 mt-1', className)}
         {...props}
       >
         {children}
