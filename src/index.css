@@ -46,9 +46,14 @@
     @apply text-base lg:text-lg;
   }
 
-  /* Modern selection */
+  /* Modern selection with gradient */
   ::selection {
-    @apply bg-primary-100 text-primary-900;
+    @apply bg-primary-200 text-primary-900;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 
   a {
@@ -94,7 +99,8 @@
   .btn-primary {
     @apply btn bg-primary-600 text-white;
     @apply hover:bg-primary-700 focus:ring-primary-500;
-    @apply active:bg-primary-800;
+    @apply active:bg-primary-800 hover:shadow-md;
+    @apply transform hover:scale-105 transition-all duration-200;
   }
 
   /* Secondary button */
@@ -294,6 +300,48 @@
 }
 
 /* ============================================================================
+   SONNETIX BRAND STYLES
+   ============================================================================ */
+
+@layer components {
+  /* SonneTix branded button with gradient */
+  .btn-sonnetix {
+    @apply btn text-white relative overflow-hidden;
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 25%, #7c3aed 60%, #c026d3 85%, #ec4899 100%);
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  .btn-sonnetix:hover {
+    animation: gradient-shift 1s ease infinite;
+    @apply shadow-lg;
+  }
+
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Gradient card backgrounds */
+  .card-gradient {
+    @apply card relative overflow-hidden;
+  }
+
+  .card-gradient::before {
+    content: '';
+    @apply absolute inset-0 opacity-5;
+    background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 50%, #fce7f3 100%);
+  }
+
+  /* Badge with gradient */
+  .badge-gradient {
+    @apply badge text-white;
+    background: linear-gradient(135deg, #38bdf8 0%, #c026d3 100%);
+  }
+}
+
+/* ============================================================================
    UTILITY CLASSES
    ============================================================================ */
 
@@ -301,6 +349,12 @@
   /* Text gradient */
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-600;
+  }
+
+  /* SonneTix brand gradient text */
+  .text-gradient-sonnetix {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #38bdf8 0%, #0284c7 25%, #7c3aed 60%, #c026d3 85%, #ec4899 100%);
   }
 
   /* Focus visible outline */

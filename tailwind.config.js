@@ -7,19 +7,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary brand colors inspired by ekraf.go.id
+        // SonneTix brand colors - vibrant and playful
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#b9e6fe',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
+          950: '#082f49',
         },
         secondary: {
           50: '#fdf4ff',
@@ -33,6 +33,19 @@ export default {
           800: '#86198f',
           900: '#701a75',
           950: '#4a044e',
+        },
+        accent: {
+          50: '#fefce8',
+          100: '#fef9c3',
+          200: '#fef08a',
+          300: '#fde047',
+          400: '#facc15',
+          500: '#eab308',
+          600: '#ca8a04',
+          700: '#a16207',
+          800: '#854d0e',
+          900: '#713f12',
+          950: '#422006',
         },
         // Semantic colors
         success: {
@@ -106,6 +119,13 @@ export default {
         sans: ['IBM Plex Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
         serif: ['IBM Plex Serif', 'Georgia', 'serif'],
         mono: ['IBM Plex Mono', 'Consolas', 'monospace'],
+        display: ['IBM Plex Sans', 'system-ui', 'sans-serif'],
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'gradient-sonnetix': 'linear-gradient(135deg, #38bdf8 0%, #0284c7 25%, #7c3aed 60%, #c026d3 85%, #ec4899 100%)',
+        'gradient-sonnetix-light': 'linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 50%, #fce7f3 100%)',
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1rem' }],
