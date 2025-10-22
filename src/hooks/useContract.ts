@@ -1,13 +1,34 @@
 import { useCallback } from 'react';
-import { parseUnits, formatUnits } from 'ethers';
-import { useWeb3 } from '@/contexts/Web3Context';
-import { CONTRACTS } from '@/config/contracts';
+import { parseUnits, formatUnits, Contract } from 'ethers';
+import { useWallets } from '@privy-io/react-auth';
+import { CONTRACTS, ABIS } from '@/config/contracts';
+import { getEthersSigner } from '@/lib/privy-ethers';
 
 /**
- * Hook for interacting with smart contracts
+ * Hook for interacting with smart contracts (Privy-powered)
  */
 export function useContract() {
-  const { getContract, account } = useWeb3();
+  const { wallets } = useWallets();
+  const primaryWallet = wallets[0];
+
+  /**
+   * Get a contract instance with the current wallet's signer
+   */
+  const getContract = useCallback(
+    async (contractName: keyof typeof CONTRACTS): Promise<Contract | null> => {
+      if (!primaryWallet) return null;
+
+      const address = CONTRACTS[contractName];
+      const abi = ABIS[contractName as keyof typeof ABIS];
+
+      // Ensure address is a string (not a number like CHAIN_ID)
+      if (!address || typeof address !== 'string' || !abi) return null;
+
+      const signer = await getEthersSigner(primaryWallet);
+      return new Contract(address, abi, signer);
+    },
+    [primaryWallet]
+  );
 
   // ============================================================================
   // TICKET NFT OPERATIONS
@@ -15,8 +36,10 @@ export function useContract() {
 
   const mintTicket = useCallback(
     async (eventId: string, quantity: number = 1) => {
-      const contract = getContract('TICKET_NFT');
-      if (!contract || !account) throw new Error('Wallet not connected');
+      const contract = await getContract('TICKET_NFT');
+      if (!contract || !primaryWallet) throw new Error('Wallet not connected');
+
+      const account = primaryWallet.address;
 
       if (quantity === 1) {
         const tx = await contract.mint(account, eventId);
@@ -26,23 +49,24 @@ export function useContract() {
         return await tx.wait();
       }
     },
-    [getContract, account]
+    [getContract, primaryWallet]
   );
 
   const transferTicket = useCallback(
     async (ticketId: string, toAddress: string) => {
-      const contract = getContract('TICKET_NFT');
-      if (!contract || !account) throw new Error('Wallet not connected');
+      const contract = await getContract('TICKET_NFT');
+      if (!contract || !primaryWallet) throw new Error('Wallet not connected');
 
+      const account = primaryWallet.address;
       const tx = await contract.transferFrom(account, toAddress, ticketId);
       return await tx.wait();
     },
-    [getContract, account]
+    [getContract, primaryWallet]
   );
 
   const getTicketOwner = useCallback(
     async (ticketId: string): Promise<string> => {
-      const contract = getContract('TICKET_NFT');
+      const contract = await getContract('TICKET_NFT');
       if (!contract) throw new Error('Contract not available');
 
       return await contract.ownerOf(ticketId);
@@ -56,7 +80,7 @@ export function useContract() {
 
   const createVault = useCallback(
     async (eventId: string, ticketIds: string[], loanAmount: string) => {
-      const contract = getContract('TICKET_VAULT');
+      const contract = await getContract('TICKET_VAULT');
       if (!contract) throw new Error('Wallet not connected');
 
       const loanAmountWei = parseUnits(loanAmount, 6); // USDC has 6 decimals
@@ -68,11 +92,11 @@ export function useContract() {
 
   const fundVault = useCallback(
     async (vaultId: string, amount: string) => {
-      const contract = getContract('TICKET_VAULT');
+      const contract = await getContract('TICKET_VAULT');
       if (!contract) throw new Error('Wallet not connected');
 
       // First approve USDC spending
-      const usdcContract = getContract('USDC');
+      const usdcContract = await getContract('USDC');
       if (!usdcContract) throw new Error('USDC contract not available');
 
       const amountWei = parseUnits(amount, 6);
@@ -88,7 +112,7 @@ export function useContract() {
 
   const getVaultDetails = useCallback(
     async (vaultId: string) => {
-      const contract = getContract('TICKET_VAULT');
+      const contract = await getContract('TICKET_VAULT');
       if (!contract) throw new Error('Contract not available');
 
       return await contract.getVaultDetails(vaultId);
@@ -102,7 +126,7 @@ export function useContract() {
 
   const scanTicket = useCallback(
     async (ticketId: string, gateId: string) => {
-      const contract = getContract('GATE_SCANNER');
+      const contract = await getContract('GATE_SCANNER');
       if (!contract) throw new Error('Wallet not connected');
 
       const tx = await contract.scanTicket(ticketId, gateId);
@@ -113,7 +137,7 @@ export function useContract() {
 
   const verifyTicket = useCallback(
     async (ticketId: string): Promise<boolean> => {
-      const contract = getContract('GATE_SCANNER');
+      const contract = await getContract('GATE_SCANNER');
       if (!contract) throw new Error('Contract not available');
 
       return await contract.verifyTicket(ticketId);
@@ -127,7 +151,7 @@ export function useContract() {
 
   const approveUSDC = useCallback(
     async (spender: string, amount: string) => {
-      const contract = getContract('USDC');
+      const contract = await getContract('USDC');
       if (!contract) throw new Error('Wallet not connected');
 
       const amountWei = parseUnits(amount, 6);
@@ -139,7 +163,7 @@ export function useContract() {
 
   const getUSDCAllowance = useCallback(
     async (owner: string, spender: string): Promise<string> => {
-      const contract = getContract('USDC');
+      const contract = await getContract('USDC');
       if (!contract) throw new Error('Contract not available');
 
       const allowance = await contract.allowance(owner, spender);

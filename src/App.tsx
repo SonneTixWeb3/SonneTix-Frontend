@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Web3Provider } from '@/contexts/Web3Context';
+import { PrivyProvider } from '@/providers/PrivyProvider';
 import { Layout, RoleSwitcher } from '@/components/shared';
 import { useAppStore } from '@/lib/store';
 import { OrganizerDashboardPage } from '@/pages/organizer/DashboardPage';
@@ -91,9 +91,9 @@ function AppContent() {
 
 function App() {
   return (
-    <Web3Provider>
+    <PrivyProvider>
       <AppContent />
-    </Web3Provider>
+    </PrivyProvider>
   );
 }
 
