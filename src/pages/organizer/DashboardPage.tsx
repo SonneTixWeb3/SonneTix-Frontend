@@ -80,13 +80,22 @@ export const OrganizerDashboardPage: React.FC = () => {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="btn-primary">
+          <button
+            className="btn-primary"
+            onClick={() => alert('Navigate to Create Event page - This will be connected to the form!')}
+          >
             ➕ Create New Event
           </button>
-          <button className="btn-secondary">
+          <button
+            className="btn-secondary"
+            onClick={() => alert('Mint Tickets feature coming soon! This will interact with smart contracts.')}
+          >
             🎟️ Mint Tickets
           </button>
-          <button className="btn-outline">
+          <button
+            className="btn-outline"
+            onClick={() => alert('Create Vault feature coming soon! This will deploy a new vault contract.')}
+          >
             🏦 Create Vault
           </button>
         </CardContent>

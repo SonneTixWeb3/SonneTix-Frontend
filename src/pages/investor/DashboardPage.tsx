@@ -72,10 +72,16 @@ export const InvestorDashboardPage: React.FC = () => {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="btn-primary">
+          <button
+            className="btn-primary"
+            onClick={() => alert('Navigate to Browse Vaults - Click "Browse Vaults" in sidebar!')}
+          >
             🔍 Browse Vaults
           </button>
-          <button className="btn-secondary">
+          <button
+            className="btn-secondary"
+            onClick={() => alert('Navigate to Portfolio - Click "My Portfolio" in sidebar!')}
+          >
             💼 View Portfolio
           </button>
         </CardContent>

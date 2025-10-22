@@ -59,7 +59,10 @@ export const FanEventsPage: React.FC = () => {
                 <p>📅 {formatDate(event.eventDate)}</p>
                 <p className="font-comic font-bold text-lg">{formatCurrency(event.ticketPrice)}</p>
               </div>
-              <button className="btn-primary w-full">
+              <button
+                className="btn-primary w-full"
+                onClick={() => alert(`Purchase ticket for ${event.eventName} - Connect wallet to buy!`)}
+              >
                 Buy Tickets 🎟️
               </button>
             </CardContent>

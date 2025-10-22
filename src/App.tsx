@@ -1,49 +1,86 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PrivyProvider } from '@/providers/PrivyProvider';
 import { Layout, RoleSwitcher } from '@/components/shared';
 import { useAppStore } from '@/lib/store';
 import { OrganizerDashboardPage } from '@/pages/organizer/DashboardPage';
+import { OrganizerEventsPage } from '@/pages/organizer/EventsPage';
+import { OrganizerVaultsPage } from '@/pages/organizer/VaultsPage';
+import { CreateEventPage } from '@/pages/organizer/CreateEventPage';
 import { InvestorDashboardPage } from '@/pages/investor/DashboardPage';
+import { InvestorVaultsPage } from '@/pages/investor/VaultsPage';
+import { InvestorPortfolioPage } from '@/pages/investor/PortfolioPage';
 import { FanEventsPage } from '@/pages/fan/EventsPage';
+import { FanMyTicketsPage } from '@/pages/fan/MyTicketsPage';
 import { ScannerPage } from '@/pages/scanner/ScanPage';
-import { Card, CardHeader, CardTitle, CardContent, Alert } from '@/components/ui';
+import { ScanHistoryPage } from '@/pages/scanner/ScanHistoryPage';
 
 function AppContent() {
   const { currentRole, setCurrentRole } = useAppStore();
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
+  const [currentPath, setCurrentPath] = useState('');
 
-  // Route to component mapping based on role
+  // Route to component mapping
+  const getPageForPath = (path: string) => {
+    const routes: Record<string, JSX.Element> = {
+      // Organizer routes
+      '/organizer/dashboard': <OrganizerDashboardPage />,
+      '/organizer/events': <OrganizerEventsPage />,
+      '/organizer/vaults': <OrganizerVaultsPage />,
+      '/organizer/create-event': <CreateEventPage />,
+      // Investor routes
+      '/investor/dashboard': <InvestorDashboardPage />,
+      '/investor/vaults': <InvestorVaultsPage />,
+      '/investor/portfolio': <InvestorPortfolioPage />,
+      // Fan routes
+      '/fan/events': <FanEventsPage />,
+      '/fan/my-tickets': <FanMyTicketsPage />,
+      // Scanner routes
+      '/scanner/scan': <ScannerPage />,
+      '/scanner/history': <ScanHistoryPage />,
+    };
+
+    return routes[path];
+  };
+
+  // Default route based on role
+  const getDefaultRoute = () => {
+    const defaults: Record<string, string> = {
+      ORGANIZER: '/organizer/dashboard',
+      INVESTOR: '/investor/dashboard',
+      FAN: '/fan/events',
+      SCANNER: '/scanner/scan'
+    };
+    return defaults[currentRole] || '/fan/events';
+  };
+
+  // Set default route when role changes
+  useEffect(() => {
+    setCurrentPath(getDefaultRoute());
+  }, [currentRole]);
+
+  // Get current page or default
   const getCurrentPage = () => {
-    switch (currentRole) {
-      case 'ORGANIZER':
-        return <OrganizerDashboardPage />;
-      case 'INVESTOR':
-        return <InvestorDashboardPage />;
-      case 'FAN':
-        return <FanEventsPage />;
-      case 'SCANNER':
-        return <ScannerPage />;
-      default:
-        return <FanEventsPage />;
+    if (!currentPath) return null;
+    const page = getPageForPath(currentPath);
+    if (!page) {
+      const defaultRoute = getDefaultRoute();
+      setCurrentPath(defaultRoute);
+      return getPageForPath(defaultRoute);
     }
+    return page;
+  };
+
+  // Handle navigation
+  const handleNavigate = (path: string) => {
+    setCurrentPath(path);
   };
 
   return (
-    <Layout currentRole={currentRole}>
-      {/* Welcome Banner */}
-      <Alert variant="info" className="mb-6" title="Welcome to SonneTix!">
-        <p className="text-sm">
-          This is a demo of the GatePay Vault platform. Connect your wallet to get started or{' '}
-          <button
-            onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
-            className="text-primary-600 hover:text-primary-700 font-semibold underline"
-          >
-            switch roles
-          </button>
-          {' '}to explore different features.
-        </p>
-      </Alert>
-
+    <Layout
+      currentRole={currentRole}
+      onNavigate={handleNavigate}
+      onRoleSwitcherToggle={() => setShowRoleSwitcher(!showRoleSwitcher)}
+    >
       {/* Role Switcher */}
       {showRoleSwitcher && (
         <div className="mb-6">
@@ -59,32 +96,6 @@ function AppContent() {
 
       {/* Current Page */}
       {getCurrentPage()}
-
-      {/* Info Footer */}
-      <Card className="mt-12">
-        <CardHeader>
-          <CardTitle>About This Demo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm text-gray-700">
-            <p>
-              <strong className="text-gray-900">Network:</strong> Base Sepolia Testnet
-            </p>
-            <p>
-              <strong className="text-gray-900">Data:</strong> Using mock data stored in localStorage
-            </p>
-            <p>
-              <strong className="text-gray-900">Web3:</strong> Connect MetaMask to interact with smart contracts
-            </p>
-            <div className="mt-4 p-3 bg-info-50 border border-info-200 rounded-md">
-              <p className="text-info-800">
-                <strong>💡 Tip:</strong> This is a fully functional frontend ready to connect to your backend API.
-                Check the documentation for migration instructions.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </Layout>
   );
 }

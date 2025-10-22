@@ -7,6 +7,7 @@ interface LayoutProps {
   children: ReactNode;
   currentRole: UserRole;
   onNavigate?: (path: string) => void;
+  onRoleSwitcherToggle?: () => void;
 }
 
 interface NavItem {
@@ -98,14 +99,32 @@ const NAV_ITEMS: NavItem[] = [
  * Provides consistent layout with sidebar navigation, header, and content area.
  * Navigation items adapt based on the current user role.
  */
-export const Layout: React.FC<LayoutProps> = ({ children, currentRole, onNavigate }) => {
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+export const Layout: React.FC<LayoutProps> = ({ children, currentRole, onNavigate, onRoleSwitcherToggle }) => {
+  const [sidebarOpen, setSidebarOpen] = React.useState(false); // Start closed on mobile
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [currentPath, setCurrentPath] = React.useState('/');
 
   const filteredNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
 
+  // Close mobile menu when clicking outside
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(true);
+        setMobileMenuOpen(false);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleNavigate = (path: string) => {
     setCurrentPath(path);
+    setMobileMenuOpen(false); // Close mobile menu on navigation
     if (onNavigate) {
       onNavigate(path);
     }
@@ -141,11 +160,25 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentRole, onNavigat
 
   return (
     <div className="min-h-screen flex bg-gray-50">
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-40 shadow-sm',
-          sidebarOpen ? 'w-64' : 'w-20'
+          'fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 shadow-sm overflow-y-auto',
+          'md:z-40 z-50',
+          // Mobile: full width, slide from left
+          'w-64',
+          'md:translate-x-0',
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+          // Desktop: expandable width
+          sidebarOpen ? 'md:w-64' : 'md:w-20'
         )}
       >
         {/* Logo */}
@@ -167,7 +200,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentRole, onNavigat
         </div>
 
         {/* Role Badge */}
-        {sidebarOpen && (
+        {(sidebarOpen || mobileMenuOpen) && (
           <div className="p-4">
             <div className={cn('badge flex items-center gap-2 w-full justify-center py-2', roleConfig.color)}>
               {roleConfig.icon}
@@ -192,15 +225,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentRole, onNavigat
               <span className={cn(currentPath === item.path ? 'text-primary-600' : 'text-gray-400')}>
                 {item.icon}
               </span>
-              {sidebarOpen && <span>{item.label}</span>}
+              <span className={cn(sidebarOpen || mobileMenuOpen ? 'block' : 'hidden md:hidden')}>
+                {item.label}
+              </span>
             </button>
           ))}
         </nav>
 
-        {/* Toggle Button */}
+        {/* Toggle Button - Desktop Only */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
+          className="hidden md:block absolute bottom-6 left-1/2 -translate-x-1/2 p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
           aria-label="Toggle Sidebar"
         >
           <svg
@@ -222,22 +257,53 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentRole, onNavigat
       </aside>
 
       {/* Main Content */}
-      <div className={cn('flex-1 transition-all duration-300', sidebarOpen ? 'ml-64' : 'ml-20')}>
+      <div className={cn('flex-1 transition-all duration-300', 'md:ml-64', sidebarOpen ? 'md:ml-64' : 'md:ml-20')}>
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-8 py-4 shadow-sm">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 md:px-8 py-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900">{roleConfig.title}</h2>
-              <p className="text-sm text-gray-600 mt-0.5">
+            {/* Mobile Hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+              aria-label="Toggle Menu"
+            >
+              <svg
+                className="w-6 h-6 text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+                />
+              </svg>
+            </button>
+
+            <div className="flex-1 md:flex-initial">
+              <h2 className="text-lg md:text-2xl font-semibold text-gray-900">{roleConfig.title}</h2>
+              <p className="text-xs md:text-sm text-gray-600 mt-0.5 hidden sm:block">
                 Web3 Event Financing Platform on Base Sepolia
               </p>
             </div>
-            <WalletConnect />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onRoleSwitcherToggle}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors text-sm"
+                aria-label="Switch Role"
+              >
+                {roleConfig.icon}
+                <span className="hidden md:inline">Switch Role</span>
+              </button>
+              <WalletConnect />
+            </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="p-8">
+        <main className="p-4 md:p-8">
           {children}
         </main>
       </div>
