@@ -250,6 +250,25 @@ export const CreateVaultPage: React.FC<CreateVaultPageProps> = ({ eventId, onNav
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Loan Amount (USDC)
                 </label>
+
+                {/* Number Input Field */}
+                <div className="mb-4">
+                  <input
+                    type="number"
+                    min="0"
+                    max={maxLoan}
+                    step="100"
+                    value={requestedLoan}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0;
+                      setRequestedLoan(Math.min(Math.max(0, value), maxLoan));
+                    }}
+                    className="w-full px-4 py-2 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg font-semibold text-center"
+                    placeholder="Enter loan amount"
+                  />
+                </div>
+
+                {/* Slider */}
                 <input
                   type="range"
                   min="0"

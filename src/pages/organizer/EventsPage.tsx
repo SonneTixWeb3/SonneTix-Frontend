@@ -14,7 +14,9 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
   const [loading, setLoading] = React.useState(true);
   const [viewModalOpen, setViewModalOpen] = React.useState(false);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [progressModalOpen, setProgressModalOpen] = React.useState(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Event | null>(null);
+  const [ticketSales, setTicketSales] = React.useState<{ sold: number; total: number; revenue: number; soldPercentage: number } | null>(null);
   const [editFormData, setEditFormData] = React.useState<Partial<Event>>({});
   const currentUserId = useAppStore((state) => state.currentUserId);
 
@@ -38,8 +40,11 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
     }
   };
 
-  const handleViewDetails = (event: Event) => {
+  const handleViewDetails = async (event: Event) => {
     setSelectedEvent(event);
+    // Load real ticket sales data
+    const salesData = await eventApi.getTicketSales(event.eventId);
+    setTicketSales(salesData);
     setViewModalOpen(true);
   };
 
@@ -74,6 +79,34 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
       console.log('Event updated:', updatedEvent);
     } catch (error) {
       console.error('Failed to update event:', error);
+    }
+  };
+
+  const handleProgressEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setProgressModalOpen(true);
+  };
+
+  const handleUpdateStatus = async (newStatus: 'PUBLISHED' | 'ACTIVE' | 'COMPLETED') => {
+    if (!selectedEvent) return;
+
+    try {
+      await eventApi.updateEvent(selectedEvent.eventId, { status: newStatus });
+
+      // Update local state
+      setEvents(events.map(e =>
+        e.eventId === selectedEvent.eventId
+          ? { ...e, status: newStatus }
+          : e
+      ));
+
+      setProgressModalOpen(false);
+      setViewModalOpen(false);
+      alert(`✅ Event status updated to ${newStatus}!`);
+      loadEvents(); // Refresh events
+    } catch (error) {
+      console.error('Failed to update event status:', error);
+      alert('Failed to update event status. Please try again.');
     }
   };
 
@@ -128,18 +161,24 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
                   <span className="text-gray-600">Total Tickets</span>
                   <span className="font-medium">{event.totalTickets}</span>
                 </div>
-                <div className="flex gap-2 mt-4">
+                <div className="flex items-center justify-between text-sm mb-4">
+                  <span className="text-gray-600">Status</span>
+                  <Badge variant={event.status === 'COMPLETED' ? 'success' : event.status === 'ACTIVE' ? 'warning' : 'default'}>
+                    {event.status}
+                  </Badge>
+                </div>
+                <div className="flex gap-2">
                   <button
                     className="btn-primary flex-1 text-sm"
-                    onClick={() => handleEdit(event)}
+                    onClick={() => handleProgressEvent(event)}
                   >
-                    Edit
+                    ⏩ Progress
                   </button>
                   <button
                     className="btn-secondary flex-1 text-sm"
                     onClick={() => handleViewDetails(event)}
                   >
-                    View Details
+                    View
                   </button>
                 </div>
               </div>
@@ -194,9 +233,11 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
                   </svg>
                 </div>
                 <div className="text-2xl font-bold text-blue-900">
-                  {Math.floor(selectedEvent.totalTickets * 0.65)} / {selectedEvent.totalTickets}
+                  {ticketSales?.sold || 0} / {ticketSales?.total || selectedEvent.totalTickets}
                 </div>
-                <div className="text-xs text-blue-600 mt-1">65% capacity</div>
+                <div className="text-xs text-blue-600 mt-1">
+                  {ticketSales ? `${Math.round(ticketSales.soldPercentage)}% sold` : 'No sales yet'}
+                </div>
               </div>
 
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -207,20 +248,24 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
                   </svg>
                 </div>
                 <div className="text-2xl font-bold text-green-900">
-                  {formatCurrency(selectedEvent.ticketPrice * Math.floor(selectedEvent.totalTickets * 0.65))}
+                  {formatCurrency(ticketSales?.revenue || 0)}
                 </div>
                 <div className="text-xs text-green-600 mt-1">of {formatCurrency(selectedEvent.ticketPrice * selectedEvent.totalTickets)} potential</div>
               </div>
 
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-purple-700 uppercase">Attendance Rate</span>
+                  <span className="text-xs font-medium text-purple-700 uppercase">Sales Status</span>
                   <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <div className="text-2xl font-bold text-purple-900">92%</div>
-                <div className="text-xs text-purple-600 mt-1">Expected turnout</div>
+                <div className="text-2xl font-bold text-purple-900">
+                  {selectedEvent.status === 'DRAFT' ? 'Not Started' : selectedEvent.status === 'PUBLISHED' ? 'Open' : 'Closed'}
+                </div>
+                <div className="text-xs text-purple-600 mt-1">
+                  {selectedEvent.status === 'DRAFT' ? 'Publish to start sales' : selectedEvent.status === 'PUBLISHED' ? 'Tickets available' : 'Event concluded'}
+                </div>
               </div>
             </div>
 
@@ -228,14 +273,19 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-gray-800">Ticket Sales Progress</h3>
-                <span className="text-sm text-gray-600">65% sold</span>
+                <span className="text-sm text-gray-600">
+                  {ticketSales ? `${Math.round(ticketSales.soldPercentage)}% sold` : '0% sold'}
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500" style={{width: '65%'}}></div>
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                  style={{width: `${ticketSales?.soldPercentage || 0}%`}}
+                ></div>
               </div>
               <div className="flex justify-between mt-2 text-xs text-gray-500">
-                <span>0</span>
-                <span>{selectedEvent.totalTickets}</span>
+                <span>{ticketSales?.sold || 0} sold</span>
+                <span>{selectedEvent.totalTickets} total</span>
               </div>
             </div>
 
@@ -448,6 +498,156 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
                 Save Changes
               </button>
             </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Progress Event Modal - Milestone Based */}
+      <Modal
+        isOpen={progressModalOpen}
+        onClose={() => setProgressModalOpen(false)}
+        title="Progress Event Milestone"
+        size="lg"
+      >
+        {selectedEvent && (
+          <div className="space-y-6">
+            {/* Current Status */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900">{selectedEvent.eventName}</h3>
+                  <p className="text-sm text-gray-600 mt-1">Current Status: <Badge>{selectedEvent.status}</Badge></p>
+                </div>
+              </div>
+            </div>
+
+            {/* Milestone Progress Flow */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900">Event Lifecycle Milestones</h3>
+
+              {/* Milestone 1: Published */}
+              <div className={`border-2 rounded-lg p-4 transition-all ${
+                selectedEvent.status === 'PUBLISHED' ? 'border-blue-500 bg-blue-50' :
+                selectedEvent.status === 'DRAFT' ? 'border-gray-300 bg-white hover:border-blue-400 cursor-pointer' :
+                'border-green-500 bg-green-50'
+              }`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      {selectedEvent.status !== 'DRAFT' && (
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      <h4 className="font-semibold text-gray-900">1. Event Published</h4>
+                    </div>
+                    <p className="text-sm text-gray-600">Event is visible to fans and investors. Ticket sales open.</p>
+                    <div className="mt-3 text-xs text-gray-500">
+                      ✓ Event details finalized<br/>
+                      ✓ Tickets available for purchase<br/>
+                      ✓ Vault can be created for funding
+                    </div>
+                  </div>
+                  {selectedEvent.status === 'DRAFT' && (
+                    <button
+                      onClick={() => handleUpdateStatus('PUBLISHED')}
+                      className="btn-primary text-sm"
+                    >
+                      Publish Event →
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Milestone 2: Active */}
+              <div className={`border-2 rounded-lg p-4 transition-all ${
+                selectedEvent.status === 'ACTIVE' ? 'border-blue-500 bg-blue-50' :
+                selectedEvent.status === 'PUBLISHED' ? 'border-gray-300 bg-white hover:border-blue-400 cursor-pointer' :
+                selectedEvent.status === 'COMPLETED' ? 'border-green-500 bg-green-50' :
+                'border-gray-200 bg-gray-50'
+              }`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      {selectedEvent.status === 'COMPLETED' && (
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      <h4 className="font-semibold text-gray-900">2. Event Active (Happening Now)</h4>
+                    </div>
+                    <p className="text-sm text-gray-600">Event is currently taking place. Ticket scanning active.</p>
+                    <div className="mt-3 text-xs text-gray-500">
+                      ✓ Event day arrived<br/>
+                      ✓ Attendees checking in<br/>
+                      ✓ QR code scanning operational
+                    </div>
+                  </div>
+                  {selectedEvent.status === 'PUBLISHED' && (
+                    <button
+                      onClick={() => handleUpdateStatus('ACTIVE')}
+                      className="btn-primary text-sm"
+                    >
+                      Start Event →
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Milestone 3: Completed */}
+              <div className={`border-2 rounded-lg p-4 transition-all ${
+                selectedEvent.status === 'COMPLETED' ? 'border-green-500 bg-green-50' :
+                selectedEvent.status === 'ACTIVE' ? 'border-gray-300 bg-white hover:border-blue-400 cursor-pointer' :
+                'border-gray-200 bg-gray-50'
+              }`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      {selectedEvent.status === 'COMPLETED' && (
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      <h4 className="font-semibold text-gray-900">3. Event Completed</h4>
+                    </div>
+                    <p className="text-sm text-gray-600">Event finished successfully. Settlement and payouts processing.</p>
+                    <div className="mt-3 text-xs text-gray-500">
+                      ✓ Event concluded<br/>
+                      ✓ Final attendance recorded<br/>
+                      ✓ Vault debt settlement begins<br/>
+                      ✓ Investor returns distributed
+                    </div>
+                  </div>
+                  {selectedEvent.status === 'ACTIVE' && (
+                    <button
+                      onClick={() => handleUpdateStatus('COMPLETED')}
+                      className="btn-primary text-sm"
+                    >
+                      Complete Event →
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Warning */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start gap-2">
+                <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div className="text-sm text-yellow-800">
+                  <strong>Important:</strong> Progressing through milestones is irreversible. Make sure you're ready before advancing the event status.
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setProgressModalOpen(false)}
+              className="btn-outline w-full"
+            >
+              Close
+            </button>
           </div>
         )}
       </Modal>

@@ -160,13 +160,13 @@ export const OrganizerVaultsPage: React.FC<OrganizerVaultsPageProps> = ({ onNavi
                   <div className="flex gap-2 mt-4">
                     <button
                       className="btn-primary flex-1 text-sm"
-                      onClick={() => console.log(`Manage vault: ${vault.eventName} - Management UI to be implemented`)}
+                      onClick={() => alert(`Vault Management for "${vault.eventName}"\n\nFeatures coming soon:\n- Adjust loan terms\n- Manage collateral\n- View funding status\n- Debt repayment tracking`)}
                     >
                       Manage
                     </button>
                     <button
                       className="btn-outline flex-1 text-sm"
-                      onClick={() => console.log(`View analytics for: ${vault.eventName} - Analytics to be implemented`)}
+                      onClick={() => alert(`Vault Analytics for "${vault.eventName}"\n\nFeatures coming soon:\n- Funding progress charts\n- Investor breakdown\n- Revenue projections\n- Risk metrics`)}
                     >
                       Analytics
                     </button>

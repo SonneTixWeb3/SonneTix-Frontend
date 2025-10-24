@@ -48,9 +48,10 @@ export const ScanHistoryPage: React.FC = () => {
         <CardContent>
           <div className="space-y-3">
             {scans.map((scan) => (
-              <div
+              <button
                 key={scan.scanId}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                onClick={() => alert(`Scan Details\n\nEvent: ${scan.eventName}\nTicket ID: ${scan.ticketId}\nSeat: ${scan.seatNumber || 'General Admission'}\nStatus: ${scan.status}\nScanned: ${formatDate(scan.scanTime.toISOString())}\n\nDetailed scan logs coming soon!`)}
+                className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer text-left"
               >
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900">{scan.eventName}</h4>
@@ -64,7 +65,7 @@ export const ScanHistoryPage: React.FC = () => {
                 <div className="text-right">
                   {getStatusBadge(scan.status)}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 

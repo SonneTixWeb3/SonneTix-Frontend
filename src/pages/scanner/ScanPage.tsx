@@ -81,9 +81,18 @@ export const ScannerPage: React.FC = () => {
 
             {/* Manual Entry Input */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Ticket ID (Manual Entry)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">
+                  Ticket ID (Manual Entry)
+                </label>
+                <button
+                  onClick={() => setTicketId('TKT-001')}
+                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  type="button"
+                >
+                  Use Demo Ticket
+                </button>
+              </div>
               <Input
                 type="text"
                 placeholder="Enter ticket ID (e.g., TKT-001)"
@@ -91,11 +100,16 @@ export const ScannerPage: React.FC = () => {
                 onChange={(e) => setTicketId(e.target.value)}
                 disabled={scanning}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !scanning) {
+                  if (e.key === 'Enter' && !scanning && ticketId.trim()) {
                     handleScan();
                   }
                 }}
               />
+              {!ticketId.trim() && (
+                <p className="text-xs text-gray-500">
+                  💡 Enter a ticket ID or click "Use Demo Ticket" to test the scanner
+                </p>
+              )}
             </div>
 
             {/* Result */}

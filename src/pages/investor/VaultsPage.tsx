@@ -126,7 +126,7 @@ export const InvestorVaultsPage: React.FC = () => {
     return <div className="flex items-center justify-center h-64"><div className="spinner-cartoon"></div></div>;
   }
 
-  const displayVaults = filteredVaults.length > 0 ? filteredVaults : vaults;
+  const displayVaults = filteredVaults;
 
   return (
     <div className="space-y-6">
@@ -162,7 +162,7 @@ export const InvestorVaultsPage: React.FC = () => {
               onClick={() => setActiveFilter(filter.value)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeFilter === filter.value
-                  ? 'bg-primary text-white shadow-cartoon'
+                  ? 'bg-blue-600 text-white shadow-lg'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >

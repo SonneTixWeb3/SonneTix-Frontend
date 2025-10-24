@@ -76,39 +76,54 @@ export const FanEventsPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events.map((event) => (
-          <Card key={event.eventId}>
-            {event.posterUrl && (
-              <img
-                src={event.posterUrl}
-                alt={event.eventName}
-                className="w-full h-48 object-cover border-b-3 border-ink"
-              />
-            )}
-            <CardHeader>
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <CardTitle className="text-xl">{event.eventName}</CardTitle>
-                <Badge>{event.category}</Badge>
-              </div>
-              <CardDescription>{event.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm font-hand mb-4">
-                <p>📍 {event.venue}</p>
-                <p>📅 {formatDate(event.eventDate)}</p>
-                <p className="font-comic font-bold text-lg">{formatCurrency(event.ticketPrice)}</p>
-              </div>
-              <button
-                className="btn-primary w-full"
-                onClick={() => handlePurchaseClick(event)}
-              >
-                Buy Tickets 🎟️
-              </button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {events.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <div className="text-6xl mb-4">🎫</div>
+            <h3 className="font-bold text-xl mb-2 text-gray-900">No Events Available</h3>
+            <p className="text-gray-600 mb-4">
+              There are no upcoming events at the moment. Check back soon for exciting events!
+            </p>
+            <p className="text-sm text-gray-500">
+              Event organizers can create events using the Organizer dashboard.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((event) => (
+            <Card key={event.eventId}>
+              {event.posterUrl && (
+                <img
+                  src={event.posterUrl}
+                  alt={event.eventName}
+                  className="w-full h-48 object-cover border-b-3 border-ink"
+                />
+              )}
+              <CardHeader>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <CardTitle className="text-xl">{event.eventName}</CardTitle>
+                  <Badge>{event.category}</Badge>
+                </div>
+                <CardDescription>{event.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm font-hand mb-4">
+                  <p>📍 {event.venue}</p>
+                  <p>📅 {formatDate(event.eventDate)}</p>
+                  <p className="font-comic font-bold text-lg">{formatCurrency(event.ticketPrice)}</p>
+                </div>
+                <button
+                  className="btn-primary w-full"
+                  onClick={() => handlePurchaseClick(event)}
+                >
+                  Buy Tickets 🎟️
+                </button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Purchase Modal */}
       <Modal

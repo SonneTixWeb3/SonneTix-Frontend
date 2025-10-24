@@ -48,7 +48,7 @@ export const CreateEventPage: React.FC<CreateEventPageProps> = ({ onNavigate }) 
         ipCertificateHash: `ipfs://${Math.random().toString(36).substring(7)}`, // Mock IPFS hash
         totalTickets: parseInt(formData.totalCapacity),
         ticketPrice: parseFloat(formData.ticketPrice),
-        status: 'PUBLISHED',
+        status: 'DRAFT', // Events start as DRAFT and must be manually published
       });
 
       console.log('Event created successfully:', newEvent);
