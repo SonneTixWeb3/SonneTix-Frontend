@@ -54,3 +54,5 @@ export { Separator } from './Separator';
 export type { SeparatorProps } from './Separator';
 
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
+
+export { Modal, ConfirmModal, InfoModal } from './Modal';

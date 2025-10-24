@@ -1,7 +1,14 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Input, Textarea } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardContent, Input, Textarea, ConfirmModal, InfoModal } from '@/components/ui';
+import { eventApi } from '@/lib/mockApi';
+import { useAppStore } from '@/lib/store';
+import { EventCategory } from '@/types';
 
-export const CreateEventPage: React.FC = () => {
+interface CreateEventPageProps {
+  onNavigate?: (path: string) => void;
+}
+
+export const CreateEventPage: React.FC<CreateEventPageProps> = ({ onNavigate }) => {
   const [formData, setFormData] = React.useState({
     eventName: '',
     description: '',
@@ -9,14 +16,68 @@ export const CreateEventPage: React.FC = () => {
     eventDate: '',
     ticketPrice: '',
     totalCapacity: '',
-    category: 'MUSIC'
+    category: 'CONCERT' as EventCategory
   });
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [successModalOpen, setSuccessModalOpen] = React.useState(false);
+  const [createdEventName, setCreatedEventName] = React.useState('');
+  const [isCreating, setIsCreating] = React.useState(false);
+  const currentUserId = useAppStore((state) => state.currentUserId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Creating event:', formData);
-    alert(`Event "${formData.eventName}" will be created! This will mint an NFT and deploy event contracts.`);
-    // TODO: Implement event creation logic
+    setModalOpen(true);
+  };
+
+  const handleConfirmCreate = async () => {
+    if (!currentUserId) {
+      console.error('No user ID found');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      // Create the event
+      const newEvent = await eventApi.createEvent({
+        organizerId: currentUserId,
+        eventName: formData.eventName,
+        description: formData.description,
+        venue: formData.venue,
+        eventDate: formData.eventDate,
+        category: formData.category,
+        ipCertificateHash: `ipfs://${Math.random().toString(36).substring(7)}`, // Mock IPFS hash
+        totalTickets: parseInt(formData.totalCapacity),
+        ticketPrice: parseFloat(formData.ticketPrice),
+        status: 'PUBLISHED',
+      });
+
+      console.log('Event created successfully:', newEvent);
+      setCreatedEventName(formData.eventName);
+
+      // Reset form
+      setFormData({
+        eventName: '',
+        description: '',
+        venue: '',
+        eventDate: '',
+        ticketPrice: '',
+        totalCapacity: '',
+        category: 'CONCERT'
+      });
+
+      // Show success modal
+      setSuccessModalOpen(true);
+    } catch (error) {
+      console.error('Failed to create event:', error);
+      alert('Failed to create event. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleSuccessClose = () => {
+    setSuccessModalOpen(false);
+    onNavigate?.('/organizer/events');
   };
 
   const handleChange = (field: string, value: string) => {
@@ -142,7 +203,7 @@ export const CreateEventPage: React.FC = () => {
               <button
                 type="button"
                 className="btn-outline flex-1"
-                onClick={() => alert('Go back to dashboard')}
+                onClick={() => onNavigate?.('/organizer/dashboard')}
               >
                 Cancel
               </button>
@@ -150,6 +211,25 @@ export const CreateEventPage: React.FC = () => {
           </CardContent>
         </Card>
       </form>
+
+      <ConfirmModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={handleConfirmCreate}
+        title="Create Event"
+        message={`Are you sure you want to create "${formData.eventName}"? This will mint an NFT and deploy event smart contracts on the blockchain.`}
+        confirmText={isCreating ? "Creating..." : "Create Event"}
+        cancelText="Cancel"
+        variant="primary"
+      />
+
+      <InfoModal
+        isOpen={successModalOpen}
+        onClose={handleSuccessClose}
+        title="Event Created Successfully!"
+        message={`"${createdEventName}" has been created successfully! You can now view it in your events list and start managing tickets.`}
+        buttonText="View My Events"
+      />
     </div>
   );
 };

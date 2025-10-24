@@ -6,6 +6,7 @@ import { OrganizerDashboardPage } from '@/pages/organizer/DashboardPage';
 import { OrganizerEventsPage } from '@/pages/organizer/EventsPage';
 import { OrganizerVaultsPage } from '@/pages/organizer/VaultsPage';
 import { CreateEventPage } from '@/pages/organizer/CreateEventPage';
+import { CreateVaultPage } from '@/pages/organizer/CreateVaultPage';
 import { InvestorDashboardPage } from '@/pages/investor/DashboardPage';
 import { InvestorVaultsPage } from '@/pages/investor/VaultsPage';
 import { InvestorPortfolioPage } from '@/pages/investor/PortfolioPage';
@@ -21,12 +22,18 @@ function AppContent() {
 
   // Route to component mapping
   const getPageForPath = (path: string) => {
+    // Handle dynamic routes
+    if (path.startsWith('/organizer/create-vault/')) {
+      const eventId = path.split('/').pop();
+      return <CreateVaultPage eventId={eventId!} onNavigate={handleNavigate} />;
+    }
+
     const routes: Record<string, JSX.Element> = {
       // Organizer routes
       '/organizer/dashboard': <OrganizerDashboardPage onNavigate={handleNavigate} />,
       '/organizer/events': <OrganizerEventsPage onNavigate={handleNavigate} />,
-      '/organizer/vaults': <OrganizerVaultsPage />,
-      '/organizer/create-event': <CreateEventPage />,
+      '/organizer/vaults': <OrganizerVaultsPage onNavigate={handleNavigate} />,
+      '/organizer/create-event': <CreateEventPage onNavigate={handleNavigate} />,
       // Investor routes
       '/investor/dashboard': <InvestorDashboardPage onNavigate={handleNavigate} />,
       '/investor/vaults': <InvestorVaultsPage />,

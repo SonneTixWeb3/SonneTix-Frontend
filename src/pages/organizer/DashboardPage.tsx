@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui';
 import { organizerApi } from '@/lib/mockApi';
 import { formatCurrency, formatCompactNumber } from '@/lib/utils';
+import { useAppStore } from '@/lib/store';
 
 interface OrganizerDashboardPageProps {
   onNavigate?: (path: string) => void;
@@ -10,14 +11,20 @@ interface OrganizerDashboardPageProps {
 export const OrganizerDashboardPage: React.FC<OrganizerDashboardPageProps> = ({ onNavigate }) => {
   const [stats, setStats] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
+  const currentUserId = useAppStore((state) => state.currentUserId);
 
   React.useEffect(() => {
     loadStats();
-  }, []);
+  }, [currentUserId]);
 
   const loadStats = async () => {
+    if (!currentUserId) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const data = await organizerApi.getOrganizerStats('ORG-001');
+      const data = await organizerApi.getOrganizerStats(currentUserId);
       setStats(data);
     } catch (error) {
       console.error('Failed to load stats:', error);

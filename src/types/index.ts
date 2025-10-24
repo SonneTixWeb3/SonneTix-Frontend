@@ -76,17 +76,22 @@ export type VaultStatus =
 export interface Vault {
   vaultId: string;
   eventId: string;
+  organizerAddress: string; // Organizer wallet address
   smartContractAddress: string;
   loanAmount: number;
   ltvRatio: number;
-  yieldRate: number;
+  yieldRate: number; // Basis points (e.g., 1000 = 10%)
   riskScore: number;
   vaultStatus: VaultStatus;
   totalFunded: number;
   totalReleased: number;
   debtRemaining: number;
+  totalTickets: number; // Number of tickets locked as collateral
   fundingDeadline: string;
   createdAt: string;
+  // Smart contract mirrored fields
+  investors: string[]; // Array of investor wallet addresses
+  investorContributions: Record<string, number>; // investor address => amount contributed
 }
 
 // ============================================================================
@@ -263,4 +268,23 @@ export interface VaultAnalytics {
   ticketsSold: number;
   projectedROI: number;
   daysUntilEvent: number;
+}
+
+// ============================================================================
+// ESCROW TYPES (Smart Contract Mirroring)
+// ============================================================================
+
+export interface EscrowBalance {
+  vaultId: string;
+  balance: number; // Total USDC in escrow for this vault
+  isSettled: boolean;
+}
+
+export interface SettlementDistribution {
+  vaultId: string;
+  totalRevenue: number;
+  investorPayout: number;
+  platformFee: number;
+  organizerPayout: number;
+  distributedAt: string;
 }

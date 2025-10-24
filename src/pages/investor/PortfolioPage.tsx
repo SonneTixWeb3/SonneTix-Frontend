@@ -1,13 +1,14 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui';
 import { formatCurrency, formatPercentage, formatDate } from '@/lib/utils';
+import { investmentApi, vaultApi, eventApi } from '@/lib/mockApi';
+import { useAppStore } from '@/lib/store';
+import { Investment, Vault } from '@/types';
 
-interface InvestmentData {
-  investmentId: string;
-  eventName: string;
-  amountInvested: number;
-  currentValue: number;
-  investmentDate: string;
+interface InvestmentWithDetails extends Investment {
+  vault?: Vault;
+  eventName?: string;
+  currentValue?: number;
 }
 
 interface InvestorPortfolioPageProps {
@@ -15,19 +16,68 @@ interface InvestorPortfolioPageProps {
 }
 
 export const InvestorPortfolioPage: React.FC<InvestorPortfolioPageProps> = ({ onNavigate }) => {
-  const [investments] = React.useState<InvestmentData[]>([]);
+  const [investments, setInvestments] = React.useState<InvestmentWithDetails[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const currentUserId = useAppStore((state) => state.currentUserId);
 
   React.useEffect(() => {
-    setTimeout(() => setLoading(false), 500);
-  }, []);
+    loadInvestments();
+  }, [currentUserId]);
+
+  const loadInvestments = async () => {
+    if (!currentUserId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const investmentData = await investmentApi.getInvestmentsByInvestor(currentUserId);
+
+      // Enrich investments with vault and event details
+      const enrichedInvestments = await Promise.all(
+        investmentData.map(async (investment: Investment): Promise<InvestmentWithDetails> => {
+          try {
+            const vault = await vaultApi.getVaultById(investment.vaultId);
+            const event = vault ? await eventApi.getEventById(vault.eventId) : null;
+
+            // Calculate current value based on vault status
+            let currentValue = investment.amount;
+            if (vault && vault.vaultStatus === 'SETTLED') {
+              // If settled, include yield
+              currentValue = investment.amount + (investment.amount * vault.yieldRate / 10000);
+            }
+
+            return {
+              ...investment,
+              vault: vault || undefined,
+              eventName: event?.eventName,
+              currentValue,
+            };
+          } catch {
+            return {
+              ...investment,
+              vault: undefined,
+              eventName: 'Unknown Event',
+              currentValue: investment.amount,
+            };
+          }
+        })
+      );
+
+      setInvestments(enrichedInvestments);
+    } catch (error) {
+      console.error('Failed to load investments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="spinner-cartoon"></div></div>;
   }
 
-  const totalInvested = investments.reduce((sum, inv) => sum + inv.amountInvested, 0);
-  const totalReturns = investments.reduce((sum, inv) => sum + (inv.currentValue - inv.amountInvested), 0);
+  const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
+  const totalReturns = investments.reduce((sum, inv) => sum + ((inv.currentValue || inv.amount) - inv.amount), 0);
 
   return (
     <div className="space-y-6">
@@ -73,19 +123,19 @@ export const InvestorPortfolioPage: React.FC<InvestorPortfolioPageProps> = ({ on
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900">{investment.eventName}</h4>
                   <p className="text-sm text-gray-600 mt-1">
-                    Invested on {formatDate(investment.investmentDate)}
+                    Invested on {formatDate(investment.investedAt)}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">{formatCurrency(investment.amountInvested)}</p>
+                  <p className="font-semibold">{formatCurrency(investment.amount)}</p>
                   <p className="text-sm text-gray-600 mt-1">
-                    Current: {formatCurrency(investment.currentValue)}
+                    Current: {formatCurrency(investment.currentValue || investment.amount)}
                   </p>
                   <Badge
-                    variant={investment.currentValue > investment.amountInvested ? 'success' : 'warning'}
+                    variant={(investment.currentValue || investment.amount) > investment.amount ? 'success' : 'warning'}
                     className="mt-2"
                   >
-                    {formatPercentage((investment.currentValue - investment.amountInvested) / investment.amountInvested)}
+                    {formatPercentage(((investment.currentValue || investment.amount) - investment.amount) / investment.amount)}
                   </Badge>
                 </div>
               </div>

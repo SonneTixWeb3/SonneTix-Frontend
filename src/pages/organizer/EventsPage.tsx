@@ -1,29 +1,81 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, Badge } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, Badge, Modal, Input, Textarea } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
-
-interface EventData {
-  eventId: string;
-  eventName: string;
-  description: string;
-  category: string;
-  venue: string;
-  eventDate: string;
-  ticketPrice: number;
-  totalCapacity: number;
-}
+import { eventApi } from '@/lib/mockApi';
+import { useAppStore } from '@/lib/store';
+import { Event } from '@/types';
 
 interface OrganizerEventsPageProps {
   onNavigate?: (path: string) => void;
 }
 
 export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavigate }) => {
-  const [events] = React.useState<EventData[]>([]);
+  const [events, setEvents] = React.useState<Event[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [viewModalOpen, setViewModalOpen] = React.useState(false);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [selectedEvent, setSelectedEvent] = React.useState<Event | null>(null);
+  const [editFormData, setEditFormData] = React.useState<Partial<Event>>({});
+  const currentUserId = useAppStore((state) => state.currentUserId);
 
   React.useEffect(() => {
-    setTimeout(() => setLoading(false), 500);
-  }, []);
+    loadEvents();
+  }, [currentUserId]);
+
+  const loadEvents = async () => {
+    if (!currentUserId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const data = await eventApi.getEventsByOrganizer(currentUserId);
+      setEvents(data);
+    } catch (error) {
+      console.error('Failed to load events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewDetails = (event: Event) => {
+    setSelectedEvent(event);
+    setViewModalOpen(true);
+  };
+
+  const handleEdit = (event: Event) => {
+    setSelectedEvent(event);
+    setEditFormData({
+      eventName: event.eventName,
+      description: event.description,
+      venue: event.venue,
+      eventDate: event.eventDate,
+      ticketPrice: event.ticketPrice,
+      totalTickets: event.totalTickets,
+      category: event.category,
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedEvent) return;
+
+    try {
+      // Update event in mockApi
+      const updatedEvent = {
+        ...selectedEvent,
+        ...editFormData,
+      };
+
+      // In a real app, you'd call eventApi.updateEvent()
+      // For now, just update local state
+      setEvents(events.map(e => e.eventId === selectedEvent.eventId ? updatedEvent as Event : e));
+      setEditModalOpen(false);
+      console.log('Event updated:', updatedEvent);
+    } catch (error) {
+      console.error('Failed to update event:', error);
+    }
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="spinner-cartoon"></div></div>;
@@ -73,19 +125,19 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
                   <span className="font-medium">{formatCurrency(event.ticketPrice)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Total Capacity</span>
-                  <span className="font-medium">{event.totalCapacity}</span>
+                  <span className="text-gray-600">Total Tickets</span>
+                  <span className="font-medium">{event.totalTickets}</span>
                 </div>
                 <div className="flex gap-2 mt-4">
                   <button
                     className="btn-primary flex-1 text-sm"
-                    onClick={() => console.log(`Edit event: ${event.eventName} - Edit functionality to be implemented`)}
+                    onClick={() => handleEdit(event)}
                   >
                     Edit
                   </button>
                   <button
                     className="btn-secondary flex-1 text-sm"
-                    onClick={() => console.log(`View details for: ${event.eventName} - Details page to be implemented`)}
+                    onClick={() => handleViewDetails(event)}
                   >
                     View Details
                   </button>
@@ -109,6 +161,296 @@ export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavi
           </CardContent>
         </Card>
       )}
+
+      {/* View Details Modal - Enhanced */}
+      <Modal
+        isOpen={viewModalOpen}
+        onClose={() => setViewModalOpen(false)}
+        title={selectedEvent?.eventName || "Event Details"}
+        size="xl"
+      >
+        {selectedEvent && (
+          <div className="space-y-6">
+            {/* Event Header */}
+            <div className="flex items-start justify-between pb-4 border-b">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge>{selectedEvent.category}</Badge>
+                  <Badge variant={selectedEvent.status === 'PUBLISHED' ? 'success' : 'default'}>
+                    {selectedEvent.status}
+                  </Badge>
+                </div>
+                <p className="text-gray-600 text-sm mt-2">{selectedEvent.description}</p>
+              </div>
+            </div>
+
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-blue-700 uppercase">Tickets Sold</span>
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                  </svg>
+                </div>
+                <div className="text-2xl font-bold text-blue-900">
+                  {Math.floor(selectedEvent.totalTickets * 0.65)} / {selectedEvent.totalTickets}
+                </div>
+                <div className="text-xs text-blue-600 mt-1">65% capacity</div>
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-green-700 uppercase">Revenue</span>
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="text-2xl font-bold text-green-900">
+                  {formatCurrency(selectedEvent.ticketPrice * Math.floor(selectedEvent.totalTickets * 0.65))}
+                </div>
+                <div className="text-xs text-green-600 mt-1">of {formatCurrency(selectedEvent.ticketPrice * selectedEvent.totalTickets)} potential</div>
+              </div>
+
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-purple-700 uppercase">Attendance Rate</span>
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="text-2xl font-bold text-purple-900">92%</div>
+                <div className="text-xs text-purple-600 mt-1">Expected turnout</div>
+              </div>
+            </div>
+
+            {/* Ticket Sales Progress */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-800">Ticket Sales Progress</h3>
+                <span className="text-sm text-gray-600">65% sold</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500" style={{width: '65%'}}></div>
+              </div>
+              <div className="flex justify-between mt-2 text-xs text-gray-500">
+                <span>0</span>
+                <span>{selectedEvent.totalTickets}</span>
+              </div>
+            </div>
+
+            {/* Event Details Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <div>
+                    <div className="text-xs text-gray-500">Venue</div>
+                    <div className="font-medium text-gray-900">{selectedEvent.venue}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <div>
+                    <div className="text-xs text-gray-500">Event Date</div>
+                    <div className="font-medium text-gray-900">{formatDate(selectedEvent.eventDate)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <div className="text-xs text-gray-500">Ticket Price</div>
+                    <div className="font-medium text-gray-900">{formatCurrency(selectedEvent.ticketPrice)}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <div>
+                    <div className="text-xs text-gray-500">Total Capacity</div>
+                    <div className="font-medium text-gray-900">{selectedEvent.totalTickets} tickets</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Timeline */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-800 mb-3">Event Lifecycle</h3>
+              <div className="flex items-center justify-between relative">
+                <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-300"></div>
+                <div className="absolute top-4 left-0 h-0.5 bg-blue-500 transition-all" style={{width: selectedEvent.status === 'PUBLISHED' ? '33%' : '66%'}}></div>
+
+                <div className="flex flex-col items-center z-10">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedEvent.status === 'PUBLISHED' ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <span className="text-xs mt-2 font-medium">Published</span>
+                </div>
+
+                <div className="flex flex-col items-center z-10">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedEvent.status === 'ACTIVE' ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <span className="text-xs mt-2 font-medium">Active</span>
+                </div>
+
+                <div className="flex flex-col items-center z-10">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedEvent.status === 'COMPLETED' ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                      <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <span className="text-xs mt-2 font-medium">Completed</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Technical Details */}
+            <div className="border-t pt-4 space-y-2">
+              <div>
+                <span className="text-xs text-gray-500">Event ID:</span>
+                <p className="text-xs font-mono text-gray-700 mt-1">{selectedEvent.eventId}</p>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">IP Certificate Hash:</span>
+                <p className="text-xs font-mono text-gray-700 mt-1 break-all">{selectedEvent.ipCertificateHash}</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setViewModalOpen(false);
+                  onNavigate?.(`/organizer/create-vault/${selectedEvent.eventId}`);
+                }}
+                className="btn-primary flex-1"
+              >
+                <svg className="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Create Vault
+              </button>
+              <button
+                onClick={() => handleEdit(selectedEvent)}
+                className="btn-secondary flex-1"
+              >
+                <svg className="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Event
+              </button>
+              <button
+                onClick={() => setViewModalOpen(false)}
+                className="btn-outline"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Edit Event Modal */}
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title="Edit Event"
+        size="lg"
+      >
+        {selectedEvent && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Event Name
+              </label>
+              <Input
+                value={editFormData.eventName || ''}
+                onChange={(e) => setEditFormData({ ...editFormData, eventName: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <Textarea
+                value={editFormData.description || ''}
+                onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Venue
+              </label>
+              <Input
+                value={editFormData.venue || ''}
+                onChange={(e) => setEditFormData({ ...editFormData, venue: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Event Date
+              </label>
+              <Input
+                type="date"
+                value={editFormData.eventDate || ''}
+                onChange={(e) => setEditFormData({ ...editFormData, eventDate: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ticket Price
+                </label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editFormData.ticketPrice || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, ticketPrice: parseFloat(e.target.value) })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Total Tickets
+                </label>
+                <Input
+                  type="number"
+                  value={editFormData.totalTickets || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, totalTickets: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end pt-4">
+              <button onClick={() => setEditModalOpen(false)} className="btn-outline">
+                Cancel
+              </button>
+              <button onClick={handleSaveEdit} className="btn-primary">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

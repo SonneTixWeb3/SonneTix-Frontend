@@ -1,25 +1,49 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Alert } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardContent, Alert, Input } from '@/components/ui';
+import { scannerApi } from '@/lib/mockApi';
 
 export const ScannerPage: React.FC = () => {
   const [scanning, setScanning] = React.useState(false);
-  const [result, setResult] = React.useState<{ success: boolean; message: string } | null>(null);
+  const [ticketId, setTicketId] = React.useState('');
+  const [result, setResult] = React.useState<{
+    success: boolean;
+    message: string;
+    details?: {
+      scanId: string;
+      attendanceTokenId: number;
+      debtReduced: number;
+    }
+  } | null>(null);
 
-  const handleScan = () => {
+  const handleScan = async () => {
+    if (!ticketId.trim()) {
+      setResult({
+        success: false,
+        message: '❌ Please enter a ticket ID',
+      });
+      return;
+    }
+
     setScanning(true);
     setResult(null);
 
-    // Simulate scan
-    setTimeout(() => {
-      const success = Math.random() > 0.3;
+    try {
+      // Use real mock API with smart contract logic
+      const scanResult = await scannerApi.scanTicket(ticketId, 'GATE-A');
+
       setResult({
-        success,
-        message: success
-          ? 'Ticket verified! ✅ Access granted.'
-          : 'Invalid ticket or already scanned ❌',
+        success: true,
+        message: `✅ Ticket verified! Access granted.\n💰 Vault debt reduced by $${scanResult.debtReduced}`,
+        details: scanResult,
       });
+    } catch (error: any) {
+      setResult({
+        success: false,
+        message: `❌ ${error.message || 'Invalid ticket or already scanned'}`,
+      });
+    } finally {
       setScanning(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -55,10 +79,35 @@ export const ScannerPage: React.FC = () => {
               )}
             </div>
 
+            {/* Manual Entry Input */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Ticket ID (Manual Entry)
+              </label>
+              <Input
+                type="text"
+                placeholder="Enter ticket ID (e.g., TKT-001)"
+                value={ticketId}
+                onChange={(e) => setTicketId(e.target.value)}
+                disabled={scanning}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !scanning) {
+                    handleScan();
+                  }
+                }}
+              />
+            </div>
+
             {/* Result */}
             {result && (
               <Alert variant={result.success ? 'success' : 'danger'}>
-                {result.message}
+                <div className="whitespace-pre-line">{result.message}</div>
+                {result.details && (
+                  <div className="mt-2 text-xs opacity-75">
+                    <div>Scan ID: {result.details.scanId}</div>
+                    <div>Attendance NFT #{result.details.attendanceTokenId}</div>
+                  </div>
+                )}
               </Alert>
             )}
 
@@ -66,13 +115,20 @@ export const ScannerPage: React.FC = () => {
             <div className="flex gap-4">
               <button
                 onClick={handleScan}
-                disabled={scanning}
+                disabled={scanning || !ticketId.trim()}
                 className="btn-primary flex-1"
               >
-                {scanning ? 'Scanning...' : 'Start Scan'}
+                {scanning ? 'Scanning...' : 'Scan Ticket'}
               </button>
-              <button className="btn-outline">
-                Manual Entry
+              <button
+                onClick={() => {
+                  setTicketId('');
+                  setResult(null);
+                }}
+                className="btn-outline"
+                disabled={scanning}
+              >
+                Clear
               </button>
             </div>
           </div>

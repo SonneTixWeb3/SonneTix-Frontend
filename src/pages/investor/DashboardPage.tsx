@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui';
 import { investmentApi } from '@/lib/mockApi';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
+import { useAppStore } from '@/lib/store';
 
 interface InvestorDashboardPageProps {
   onNavigate?: (path: string) => void;
@@ -10,14 +11,20 @@ interface InvestorDashboardPageProps {
 export const InvestorDashboardPage: React.FC<InvestorDashboardPageProps> = ({ onNavigate }) => {
   const [stats, setStats] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
+  const currentUserId = useAppStore((state) => state.currentUserId);
 
   React.useEffect(() => {
     loadStats();
-  }, []);
+  }, [currentUserId]);
 
   const loadStats = async () => {
+    if (!currentUserId) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const data = await investmentApi.getInvestorStats('USR-002');
+      const data = await investmentApi.getInvestorStats(currentUserId);
       setStats(data);
     } catch (error) {
       console.error('Failed to load stats:', error);
