@@ -11,7 +11,11 @@ interface Ticket {
   isUsed: boolean;
 }
 
-export const FanMyTicketsPage: React.FC = () => {
+interface FanMyTicketsPageProps {
+  onNavigate?: (path: string) => void;
+}
+
+export const FanMyTicketsPage: React.FC<FanMyTicketsPageProps> = ({ onNavigate }) => {
   const [tickets] = React.useState<Ticket[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -62,13 +66,13 @@ export const FanMyTicketsPage: React.FC = () => {
                 <div className="flex gap-2 mt-4">
                   <button
                     className="btn-primary flex-1 text-sm"
-                    onClick={() => alert(`Show QR code for ticket ${ticket.ticketId}`)}
+                    onClick={() => console.log(`Show QR code for ticket ${ticket.ticketId} - QR modal to be implemented`)}
                   >
                     View QR
                   </button>
                   <button
                     className="btn-outline flex-1 text-sm"
-                    onClick={() => alert(`Transfer ticket ${ticket.ticketId} - NFT transfer coming soon!`)}
+                    onClick={() => console.log(`Transfer ticket ${ticket.ticketId} - NFT transfer to be implemented`)}
                   >
                     Transfer
                   </button>
@@ -85,7 +89,7 @@ export const FanMyTicketsPage: React.FC = () => {
             <p className="text-gray-600 mb-4">You don't have any tickets yet.</p>
             <button
               className="btn-primary"
-              onClick={() => alert('Navigate to Browse Events - Click "Browse Events" in sidebar!')}
+              onClick={() => onNavigate?.('/fan/events')}
             >
               Browse Events
             </button>

@@ -10,7 +10,11 @@ interface InvestmentData {
   investmentDate: string;
 }
 
-export const InvestorPortfolioPage: React.FC = () => {
+interface InvestorPortfolioPageProps {
+  onNavigate?: (path: string) => void;
+}
+
+export const InvestorPortfolioPage: React.FC<InvestorPortfolioPageProps> = ({ onNavigate }) => {
   const [investments] = React.useState<InvestmentData[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -93,7 +97,7 @@ export const InvestorPortfolioPage: React.FC = () => {
               <p className="text-gray-600 mb-4">You don't have any investments yet.</p>
               <button
                 className="btn-primary"
-                onClick={() => alert('Navigate to Browse Vaults - Click "Browse Vaults" in sidebar!')}
+                onClick={() => onNavigate?.('/investor/vaults')}
               >
                 Browse Vaults
               </button>

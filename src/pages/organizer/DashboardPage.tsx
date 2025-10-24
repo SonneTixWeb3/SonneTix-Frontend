@@ -3,7 +3,11 @@ import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui
 import { organizerApi } from '@/lib/mockApi';
 import { formatCurrency, formatCompactNumber } from '@/lib/utils';
 
-export const OrganizerDashboardPage: React.FC = () => {
+interface OrganizerDashboardPageProps {
+  onNavigate?: (path: string) => void;
+}
+
+export const OrganizerDashboardPage: React.FC<OrganizerDashboardPageProps> = ({ onNavigate }) => {
   const [stats, setStats] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -82,21 +86,21 @@ export const OrganizerDashboardPage: React.FC = () => {
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             className="btn-primary"
-            onClick={() => alert('Navigate to Create Event page - This will be connected to the form!')}
+            onClick={() => onNavigate?.('/organizer/create-event')}
           >
             ➕ Create New Event
           </button>
           <button
             className="btn-secondary"
-            onClick={() => alert('Mint Tickets feature coming soon! This will interact with smart contracts.')}
+            onClick={() => onNavigate?.('/organizer/events')}
           >
-            🎟️ Mint Tickets
+            🎟️ Manage Events
           </button>
           <button
             className="btn-outline"
-            onClick={() => alert('Create Vault feature coming soon! This will deploy a new vault contract.')}
+            onClick={() => onNavigate?.('/organizer/vaults')}
           >
-            🏦 Create Vault
+            🏦 View Vaults
           </button>
         </CardContent>
       </Card>

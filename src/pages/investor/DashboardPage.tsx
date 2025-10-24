@@ -3,7 +3,11 @@ import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui
 import { investmentApi } from '@/lib/mockApi';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 
-export const InvestorDashboardPage: React.FC = () => {
+interface InvestorDashboardPageProps {
+  onNavigate?: (path: string) => void;
+}
+
+export const InvestorDashboardPage: React.FC<InvestorDashboardPageProps> = ({ onNavigate }) => {
   const [stats, setStats] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -74,13 +78,13 @@ export const InvestorDashboardPage: React.FC = () => {
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             className="btn-primary"
-            onClick={() => alert('Navigate to Browse Vaults - Click "Browse Vaults" in sidebar!')}
+            onClick={() => onNavigate?.('/investor/vaults')}
           >
             🔍 Browse Vaults
           </button>
           <button
             className="btn-secondary"
-            onClick={() => alert('Navigate to Portfolio - Click "My Portfolio" in sidebar!')}
+            onClick={() => onNavigate?.('/investor/portfolio')}
           >
             💼 View Portfolio
           </button>

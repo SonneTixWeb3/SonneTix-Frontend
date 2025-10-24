@@ -13,7 +13,11 @@ interface EventData {
   totalCapacity: number;
 }
 
-export const OrganizerEventsPage: React.FC = () => {
+interface OrganizerEventsPageProps {
+  onNavigate?: (path: string) => void;
+}
+
+export const OrganizerEventsPage: React.FC<OrganizerEventsPageProps> = ({ onNavigate }) => {
   const [events] = React.useState<EventData[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -36,7 +40,7 @@ export const OrganizerEventsPage: React.FC = () => {
         </div>
         <button
           className="btn-primary"
-          onClick={() => alert('Navigate to Create Event form - Feature coming soon!')}
+          onClick={() => onNavigate?.('/organizer/create-event')}
         >
           + Create New Event
         </button>
@@ -75,13 +79,13 @@ export const OrganizerEventsPage: React.FC = () => {
                 <div className="flex gap-2 mt-4">
                   <button
                     className="btn-primary flex-1 text-sm"
-                    onClick={() => alert(`Edit event: ${event.eventName}`)}
+                    onClick={() => console.log(`Edit event: ${event.eventName} - Edit functionality to be implemented`)}
                   >
                     Edit
                   </button>
                   <button
                     className="btn-secondary flex-1 text-sm"
-                    onClick={() => alert(`View details for: ${event.eventName}`)}
+                    onClick={() => console.log(`View details for: ${event.eventName} - Details page to be implemented`)}
                   >
                     View Details
                   </button>
@@ -98,7 +102,7 @@ export const OrganizerEventsPage: React.FC = () => {
             <p className="text-gray-600 mb-4">You haven't created any events yet.</p>
             <button
               className="btn-primary"
-              onClick={() => alert('Create your first event - Form coming soon!')}
+              onClick={() => onNavigate?.('/organizer/create-event')}
             >
               Create Your First Event
             </button>

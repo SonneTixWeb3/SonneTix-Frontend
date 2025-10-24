@@ -23,17 +23,17 @@ function AppContent() {
   const getPageForPath = (path: string) => {
     const routes: Record<string, JSX.Element> = {
       // Organizer routes
-      '/organizer/dashboard': <OrganizerDashboardPage />,
-      '/organizer/events': <OrganizerEventsPage />,
+      '/organizer/dashboard': <OrganizerDashboardPage onNavigate={handleNavigate} />,
+      '/organizer/events': <OrganizerEventsPage onNavigate={handleNavigate} />,
       '/organizer/vaults': <OrganizerVaultsPage />,
       '/organizer/create-event': <CreateEventPage />,
       // Investor routes
-      '/investor/dashboard': <InvestorDashboardPage />,
+      '/investor/dashboard': <InvestorDashboardPage onNavigate={handleNavigate} />,
       '/investor/vaults': <InvestorVaultsPage />,
-      '/investor/portfolio': <InvestorPortfolioPage />,
+      '/investor/portfolio': <InvestorPortfolioPage onNavigate={handleNavigate} />,
       // Fan routes
       '/fan/events': <FanEventsPage />,
-      '/fan/my-tickets': <FanMyTicketsPage />,
+      '/fan/my-tickets': <FanMyTicketsPage onNavigate={handleNavigate} />,
       // Scanner routes
       '/scanner/scan': <ScannerPage />,
       '/scanner/history': <ScanHistoryPage />,
